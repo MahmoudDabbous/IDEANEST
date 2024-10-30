@@ -201,7 +201,7 @@ export class OrganizationsService {
         };
     }
 
-    async removeMember(orgId: string, adminUserId: string, memberIdToRemove: string) {
+    async removeMember(orgId: string, adminUserId: string, memberEmail: string) {
         const adminUser = await this.userModel.findById(adminUserId);
         if (!adminUser) {
             throw new NotFoundException('Admin user not found');
@@ -221,20 +221,12 @@ export class OrganizationsService {
             throw new UnauthorizedException('Not authorized to remove members from this organization');
         }
 
-        const memberToRemove = await this.userModel.findById(memberIdToRemove);
+        const memberToRemove = organization.organization_members.find(
+            (member) => member.email === memberEmail
+        );
+
         if (!memberToRemove) {
             throw new NotFoundException('Member not found');
-        }
-
-        const admins = organization.organization_members.filter(
-            member => member.access_level === AccessLevel.ADMIN
-        );
-        const memberIsAdmin = organization.organization_members.find(
-            member => member.email === memberToRemove.email && member.access_level === AccessLevel.ADMIN
-        );
-
-        if (admins.length === 1 && memberIsAdmin) {
-            throw new BadRequestException('Cannot remove the last admin from the organization');
         }
 
         const updatedOrg = await this.organizationModel.findByIdAndUpdate(
@@ -249,8 +241,8 @@ export class OrganizationsService {
             { new: true }
         );
 
-        await this.userModel.findByIdAndUpdate(
-            memberIdToRemove,
+        await this.userModel.findOneAndUpdate(
+            { email: memberToRemove.email },
             {
                 $pull: {
                     organizations: orgId,
@@ -267,7 +259,7 @@ export class OrganizationsService {
     async updateMemberRole(
         orgId: string,
         adminUserId: string,
-        memberIdToUpdate: string,
+        memberEmail: string,
         newRole: AccessLevel
     ) {
         if (!Object.values(AccessLevel).includes(newRole)) {
@@ -290,15 +282,17 @@ export class OrganizationsService {
         });
 
         if (!organization) {
-            throw new UnauthorizedException('Not authorized to update member roles in this organization');
+            throw new UnauthorizedException('Not authorized to remove members from this organization');
         }
 
-        const memberToUpdate = await this.userModel.findById(memberIdToUpdate);
+        const memberToUpdate = organization.organization_members.find(
+            (member) => member.email === memberEmail
+        );
+
         if (!memberToUpdate) {
             throw new NotFoundException('Member not found');
         }
-
-        if (adminUserId === memberIdToUpdate) {
+        if (adminUser.email === memberToUpdate.email) {
             throw new BadRequestException('Cannot change your own role');
         }
 

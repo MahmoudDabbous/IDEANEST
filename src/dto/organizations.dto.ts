@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsEmail } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEmail, IsEnum } from 'class-validator';
+import { AccessLevel } from 'src/schemas/organization.schema';
 
 export class CreateOrganizationDto {
     @IsString()
@@ -30,4 +31,25 @@ export class InviteUserDto {
     @IsNotEmpty()
     @ApiProperty()
     user_email: string;
+}
+
+
+export class RemoveMemberDto {
+    @IsEmail()
+    @IsNotEmpty()
+    @ApiProperty()
+    member_email: string;
+}
+
+export class UpdateMemberRole {
+    @IsEmail()
+    @IsNotEmpty()
+    @ApiProperty()
+    member_email: string;
+
+
+    @IsEnum(AccessLevel)
+    @IsNotEmpty()
+    @ApiProperty({ enum: AccessLevel })
+    role: AccessLevel;
 }

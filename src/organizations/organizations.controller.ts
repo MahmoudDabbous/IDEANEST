@@ -10,7 +10,6 @@ import {
     Query,
     HttpStatus,
     HttpCode,
-    Optional,
 } from '@nestjs/common';
 import {
     ApiTags,
@@ -19,9 +18,11 @@ import {
     ApiBearerAuth,
     ApiQuery,
     ApiParam,
+    ApiBody,
+    ApiProperty,
 } from '@nestjs/swagger';
 import { User } from 'src/decorators/user.decorator';
-import { CreateOrganizationDto, InviteUserDto, UpdateOrganizationDto } from 'src/dto/organizations.dto';
+import { CreateOrganizationDto, InviteUserDto, RemoveMemberDto, UpdateMemberRole, UpdateOrganizationDto } from 'src/dto/organizations.dto';
 import { PaginationQueryDto } from 'src/dto/pagination.dto';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { AccessLevel } from 'src/schemas/organization.schema';
@@ -173,11 +174,11 @@ export class OrganizationsController {
         return this.organizationsService.getMembers(orgId, userId, paginationQuery);
     }
 
-    @Delete(':organization_id/members/:member_id')
+    @Delete(':organization_id/members')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Remove member from organization' })
     @ApiParam({ name: 'organization_id', type: String })
-    @ApiParam({ name: 'member_id', type: String })
+    @ApiBody({ type: RemoveMemberDto })
     @ApiResponse({
         status: 200,
         description: 'Member removed successfully'
@@ -189,16 +190,15 @@ export class OrganizationsController {
     async removeMember(
         @User('id') userId: string,
         @Param('organization_id') orgId: string,
-        @Param('member_id') memberId: string,
+        @Body() member: RemoveMemberDto,
     ) {
-        return this.organizationsService.removeMember(orgId, userId, memberId);
+        return this.organizationsService.removeMember(orgId, userId, member.member_email);
     }
 
     @Put(':organization_id/members/:member_id/role')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Update member role' })
     @ApiParam({ name: 'organization_id', type: String })
-    @ApiParam({ name: 'member_id', type: String })
     @ApiResponse({
         status: 200,
         description: 'Member role updated successfully'
@@ -210,9 +210,8 @@ export class OrganizationsController {
     async updateMemberRole(
         @User('id') userId: string,
         @Param('organization_id') orgId: string,
-        @Param('member_id') memberId: string,
-        @Body('role') role: AccessLevel,
+        @Body() updateMemberRoleDto: UpdateMemberRole,
     ) {
-        return this.organizationsService.updateMemberRole(orgId, userId, memberId, role);
+        return this.organizationsService.updateMemberRole(orgId, userId, updateMemberRoleDto.member_email, updateMemberRoleDto.role);
     }
 }
