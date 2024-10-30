@@ -5,15 +5,14 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AuthService } from 'src/auth/auth.service';
 import { JwtStrategy } from 'src/auth/jwt.strategy';
 import { AuthController } from './auth.controller';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JWTConfig } from 'src/config/jwt.config';
+import { RedisModule } from 'src/redis/redis.module';
 
 @Module({
     imports: [
         MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-        JwtModule.register({
-            secret: 'secret',
-            signOptions: { expiresIn: '1h' },
-        }),
+        JwtModule.registerAsync(JWTConfig),
+        RedisModule
     ],
     controllers: [AuthController],
     providers: [AuthService, JwtStrategy],

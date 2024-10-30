@@ -88,4 +88,21 @@ export class AuthController {
     async getProfile(@Request() req) {
         return this.authService.getProfile(req.user.id);
     }
+
+    @Post('revoke-refresh-token')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Revoke refresh token' })
+    @ApiResponse({
+        status: 200,
+        description: 'Refresh token revoked successfully'
+    })
+    @ApiResponse({
+        status: 401,
+        description: 'Unauthorized or invalid token'
+    })
+    async revokeRefreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
+        return this.authService.revokeRefreshToken(refreshTokenDto.refresh_token);
+    }
 }
